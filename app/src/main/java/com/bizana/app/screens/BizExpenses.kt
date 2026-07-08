@@ -61,6 +61,7 @@ import com.bizana.app.ui.LocalB
 import com.bizana.app.ui.Pill
 import com.bizana.app.ui.PrimaryButton
 import com.bizana.app.ui.SectionTitle
+import com.bizana.app.ui.Sheet
 import com.bizana.app.ui.Slice
 import com.bizana.app.ui.longPressable
 import com.bizana.app.ui.toAmount

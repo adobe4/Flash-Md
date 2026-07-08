@@ -16,14 +16,14 @@ class MainActivity : ComponentActivity() {
     private var pendingText: ((String) -> Unit)? = null
     private var pendingImage: ((String) -> Unit)? = null
 
-    private val openText = registerForActivityResult(ActivityResultContracts.OpenDocument) { uri: Uri? ->
+    private val openText = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         val cb = pendingText; pendingText = null
         if (uri != null && cb != null) {
             try { cb(Files.readText(this, uri)) } catch (_: Exception) { }
         }
     }
 
-    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent) { uri: Uri? ->
+    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         val cb = pendingImage; pendingImage = null
         if (uri != null && cb != null) {
             try {

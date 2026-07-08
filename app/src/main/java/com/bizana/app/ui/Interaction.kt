@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -18,7 +19,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 
 /** Clickable with no ripple + a subtle press-down scale, and a light haptic tick. */
-fun Modifier.noRippleClickable(enabled: Boolean = true, onClick: () -> Unit): Modifier = composed {
+fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = noRippleClickable(true, onClick)
+
+fun Modifier.noRippleClickable(enabled: Boolean, onClick: () -> Unit): Modifier = composed {
     val context = LocalContext.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
