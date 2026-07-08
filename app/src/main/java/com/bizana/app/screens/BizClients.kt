@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.People
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
