@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- amber glow disc -->
+    <path
+        android:fillColor="#F59E0B"
+        android:fillAlpha="0.18"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    <!-- invoice sheet -->
+    <path
+        android:fillColor="#F2F5FA"
+        android:pathData="M38,30 h26 a6,6 0 0 1 6,6 v33 l-8,6 -8,-4 -8,4 -8,-6 v-33 a6,6 0 0 1 6,-6 z" />
+    <!-- text lines -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M42,40 h18 v3.4 h-18 z M42,48 h24 v3.4 h-24 z" />
+    <!-- amber total line -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M42,56 h24 v4.6 h-24 z" />
+    <!-- amber coin badge -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M68,66m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <path
+        android:fillColor="#0C121D"
+        android:pathData="M65.2,61.5 h5.6 v2.2 h-5.6 z M64,65 h8 v2.2 h-8 z M65.2,68.5 h5.6 v2.2 h-5.6 z" />
+</vector>
