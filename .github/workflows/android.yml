@@ -44,7 +44,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish rolling release
-        if: github.ref == 'refs/heads/claude/vinakili-android-app-o3aimf' || github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/claude/bizana-android-app-o3aimf' || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
