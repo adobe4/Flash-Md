@@ -30,6 +30,10 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +41,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vinakili.app.i18n.LocalStr
+
+/** Tracks how many modal overlays are open, so the floating dock can hide behind them. */
+object OverlayBus {
+    var count by mutableStateOf(0)
+        private set
+    fun enter() { count++ }
+    fun leave() { if (count > 0) count-- }
+}
+
+@Composable
+private fun RegisterOverlay(visible: Boolean) {
+    DisposableEffect(visible) {
+        if (visible) OverlayBus.enter()
+        onDispose { if (visible) OverlayBus.leave() }
+    }
+}
 
 @Composable
 fun Sheet(
@@ -46,6 +66,7 @@ fun Sheet(
     content: @Composable () -> Unit,
 ) {
     val b = LocalB.current
+    RegisterOverlay(visible)
     AnimatedVisibility(visible, enter = fadeIn(tween(160)), exit = fadeOut(tween(160))) {
         Box(
             Modifier.fillMaxSize().background(b.scrim).noRippleClickable { onDismiss() },
@@ -99,6 +120,7 @@ fun ConfirmDialog(
 ) {
     val b = LocalB.current
     val s = LocalStr.current
+    RegisterOverlay(visible)
     AnimatedVisibility(visible, enter = fadeIn(tween(150)), exit = fadeOut(tween(120))) {
         Box(Modifier.fillMaxSize().background(b.scrim).noRippleClickable { onDismiss() },
             contentAlignment = Alignment.Center) {

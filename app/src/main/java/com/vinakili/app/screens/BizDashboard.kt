@@ -65,32 +65,31 @@ fun DashboardScreen(app: AppState) {
     val live = invoices.filter { it.deletedAt == null }
     val month = thisYm()
 
-    var revenueMonth = 0.0
-    var paidMonth = 0.0
-    var unpaidCount = 0
-    var unpaidAmt = 0.0
-    var overdueCount = 0
-    live.forEach { inv ->
-        val t = invoiceTotals(inv, items, payments)
-        val eff = effectiveStatus(inv, t)
-        if (inv.status != "cancelled" && ymOf(inv.date) == month) revenueMonth += t.total
-        payments.filter { it.deletedAt == null && it.invoiceId == inv.id && ymOf(it.date) == month }
-            .forEach { paidMonth += it.amount }
-        if (eff == "sent" || eff == "overdue") { unpaidCount++; unpaidAmt += t.balance }
-        if (eff == "overdue") overdueCount++
+    val d = androidx.compose.runtime.remember(invoices, items, payments, clients) {
+        var revenueMonth = 0.0; var paidMonth = 0.0
+        var unpaidCount = 0; var unpaidAmt = 0.0; var overdueCount = 0
+        live.forEach { inv ->
+            val t = invoiceTotals(inv, items, payments)
+            val eff = effectiveStatus(inv, t)
+            if (inv.status != "cancelled" && ymOf(inv.date) == month) revenueMonth += t.total
+            payments.filter { it.deletedAt == null && it.invoiceId == inv.id && ymOf(it.date) == month }
+                .forEach { paidMonth += it.amount }
+            if (eff == "sent" || eff == "overdue") { unpaidCount++; unpaidAmt += t.balance }
+            if (eff == "overdue") overdueCount++
+        }
+        val days = (6 downTo 0).map { com.vinakili.app.data.addDays(com.vinakili.app.data.todayStr(), -it) }
+        val rev7 = days.map { day -> payments.filter { it.deletedAt == null && it.date == day }.sumOf { it.amount }.toFloat() }
+        val dayLabels = days.map { it.substring(8) }
+        val topClients = clients.filter { it.deletedAt == null }.map { cl ->
+            val rev = live.filter { it.clientId == cl.id && ymOf(it.date) == month && it.status != "cancelled" }
+                .sumOf { invoiceTotals(it, items, payments).total }
+            cl to rev
+        }.filter { it.second > 0 }.sortedByDescending { it.second }.take(3)
+        DashData(revenueMonth, paidMonth, unpaidCount, unpaidAmt, overdueCount, rev7, dayLabels, topClients)
     }
-
-    // revenue last 7 days (by payments received)
-    val days = (6 downTo 0).map { com.vinakili.app.data.addDays(com.vinakili.app.data.todayStr(), -it) }
-    val rev7 = days.map { d -> payments.filter { it.deletedAt == null && it.date == d }.sumOf { it.amount }.toFloat() }
-    val dayLabels = days.map { it.substring(8) }
-
-    // top clients this month
-    val topClients = clients.filter { it.deletedAt == null }.map { cl ->
-        val rev = live.filter { it.clientId == cl.id && ymOf(it.date) == month && it.status != "cancelled" }
-            .sumOf { invoiceTotals(it, items, payments).total }
-        cl to rev
-    }.filter { it.second > 0 }.sortedByDescending { it.second }.take(3)
+    val revenueMonth = d.revenueMonth; val paidMonth = d.paidMonth
+    val unpaidCount = d.unpaidCount; val unpaidAmt = d.unpaidAmt; val overdueCount = d.overdueCount
+    val rev7 = d.rev7; val dayLabels = d.dayLabels; val topClients = d.topClients
 
     ScreenColumn {
         ScreenTitle(s.dashboard, sub = s.business)
@@ -193,3 +192,14 @@ private fun QuickAction(label: String, icon: ImageVector, bg: androidx.compose.u
         Text(label, color = fg, fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
     }
 }
+
+private data class DashData(
+    val revenueMonth: Double,
+    val paidMonth: Double,
+    val unpaidCount: Int,
+    val unpaidAmt: Double,
+    val overdueCount: Int,
+    val rev7: List<Float>,
+    val dayLabels: List<String>,
+    val topClients: List<Pair<com.vinakili.app.data.Client, Double>>,
+)

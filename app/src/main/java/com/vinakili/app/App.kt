@@ -2,6 +2,8 @@ package com.vinakili.app
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -11,8 +13,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +58,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -84,6 +92,8 @@ import com.vinakili.app.screens.StatsScreen
 import com.vinakili.app.ui.AnimatedMoney
 import com.vinakili.app.ui.BoxScopeToastHost
 import com.vinakili.app.ui.LocalB
+import com.vinakili.app.ui.OverlayBus
+import com.vinakili.app.ui.SplashScreen
 import com.vinakili.app.ui.VinakiliMark
 import com.vinakili.app.ui.VinakiliTheme
 import com.vinakili.app.ui.accent
@@ -102,6 +112,9 @@ fun VinakiliApp(app: AppState) {
     val dark = theme != "light"
     val s = strFor(lang)
 
+    var revealed by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { delay(1350); revealed = true }
+
     VinakiliTheme(dark = dark, business = app.business) {
         CompositionLocalProvider(LocalStr provides s) {
             val b = LocalB.current
@@ -116,6 +129,14 @@ fun VinakiliApp(app: AppState) {
                     if (app.toast != null) { delay(2200); app.toast = null }
                 }
                 BoxScopeToastHost(app.toast, Modifier.align(Alignment.TopCenter).statusBarsPadding())
+
+                AnimatedVisibility(
+                    visible = !revealed,
+                    enter = EnterTransition.None,
+                    exit = fadeOut(tween(480)) + scaleOut(targetScale = 1.08f, animationSpec = tween(480)),
+                ) {
+                    SplashScreen()
+                }
             }
         }
     }
@@ -148,9 +169,9 @@ private fun MainShell(app: AppState, s: Str) {
                 AnimatedContent(
                     targetState = ScreenKey(app.business, tabIndex, app.current),
                     transitionSpec = {
-                        (fadeIn(tween(200)) + slideInVertically(
-                            spring(dampingRatio = 0.80f, stiffness = Spring.StiffnessMediumLow)
-                        ) { it / 16 }).togetherWith(fadeOut(tween(120)))
+                        (fadeIn(tween(240)) + scaleIn(initialScale = 0.975f, animationSpec = tween(240)))
+                            .togetherWith(fadeOut(tween(160)))
+                            .using(SizeTransform(clip = false))
                     },
                     label = "content",
                 ) { key ->
@@ -165,10 +186,10 @@ private fun MainShell(app: AppState, s: Str) {
             }
         }
         AnimatedVisibility(
-            app.current is Screen.Root,
-            enter = fadeIn(tween(200)) + slideInVertically(
-                spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)) { it / 2 },
-            exit = fadeOut(tween(120)),
+            app.current is Screen.Root && OverlayBus.count == 0,
+            enter = fadeIn(tween(220)) + slideInVertically(
+                spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow)) { it / 2 },
+            exit = fadeOut(tween(160)) + slideOutVertically(tween(200)) { it / 2 },
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             DockNav(app, tabs, tabIndex)

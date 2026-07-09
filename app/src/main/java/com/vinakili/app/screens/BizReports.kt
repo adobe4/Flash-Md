@@ -76,56 +76,56 @@ fun ReportsScreen(app: AppState) {
         else -> true
     }
 
+    // range-dependent totals (cheap: one pass)
     val revenue = live.filter { it.status != "cancelled" && invInRange(it.date) }
         .sumOf { invoiceTotals(it, items, payments).total }
     val expTotal = liveExp.filter { invInRange(it.date) }.sumOf { it.amount }
     val profit = revenue - expTotal
     val hasData = live.isNotEmpty() || liveExp.isNotEmpty()
 
-    // 12-month revenue + expenses
-    val months = lastMonthKeys(12)
-    val revSeries = months.map { m ->
-        live.filter { it.status != "cancelled" && ymOf(it.date) == m }
-            .sumOf { invoiceTotals(it, items, payments).total }.toFloat()
-    }
-    val expSeries = months.map { m -> liveExp.filter { ymOf(it.date) == m }.sumOf { it.amount }.toFloat() }
-    val monthLabels = months.filterIndexed { i, _ -> i % 2 == 0 }.map { monthShort(it, lang) }
-
-    // status pie
-    var paidC = 0; var unpaidC = 0; var overdueC = 0; var draftC = 0
-    live.forEach {
-        when (effectiveStatus(it, invoiceTotals(it, items, payments))) {
-            "paid" -> paidC++
-            "overdue" -> overdueC++
-            "draft" -> draftC++
-            "sent" -> unpaidC++
-            else -> {}
+    // heavy, range-independent aggregates — computed once per data change
+    val agg = remember(invoices, items, payments, expenses, clients, lang) {
+        val months = lastMonthKeys(12)
+        val revSeries = months.map { m ->
+            live.filter { it.status != "cancelled" && ymOf(it.date) == m }
+                .sumOf { invoiceTotals(it, items, payments).total }.toFloat()
         }
+        val expSeries = months.map { m -> liveExp.filter { ymOf(it.date) == m }.sumOf { it.amount }.toFloat() }
+        val monthLabels = months.filterIndexed { i, _ -> i % 2 == 0 }.map { monthShort(it, lang) }
+        var paidC = 0; var unpaidC = 0; var overdueC = 0; var draftC = 0
+        live.forEach {
+            when (effectiveStatus(it, invoiceTotals(it, items, payments))) {
+                "paid" -> paidC++
+                "overdue" -> overdueC++
+                "draft" -> draftC++
+                "sent" -> unpaidC++
+                else -> {}
+            }
+        }
+        val topClients = clients.filter { it.deletedAt == null }.map { cl ->
+            cl to live.filter { it.clientId == cl.id && it.status != "cancelled" }
+                .sumOf { invoiceTotals(it, items, payments).total }
+        }.filter { it.second > 0 }.sortedByDescending { it.second }.take(5)
+        val overdue = live.filter { effectiveStatus(it, invoiceTotals(it, items, payments)) == "overdue" }
+            .sortedBy { it.dueDate }
+        val freq = HashMap<String, Int>()
+        items.filter { it.deletedAt == null }.forEach { it2 ->
+            val key = it2.description.trim().lowercase()
+            if (key.isNotBlank()) freq[key] = (freq[key] ?: 0) + 1
+        }
+        val bestSelling = freq.entries.sortedByDescending { it.value }.map { it.key to it.value }.take(5)
+        ReportAgg(revSeries, expSeries, monthLabels, intArrayOf(paidC, unpaidC, overdueC, draftC),
+            topClients, overdue, bestSelling)
     }
+    val revSeries = agg.revSeries; val expSeries = agg.expSeries; val monthLabels = agg.monthLabels
+    val paidC = agg.counts[0]; val unpaidC = agg.counts[1]; val overdueC = agg.counts[2]; val draftC = agg.counts[3]
+    val topClients = agg.topClients; val overdue = agg.overdue; val bestSelling = agg.bestSelling
     val statusSlices = buildList {
         if (paidC > 0) add(Slice(s.paid, paidC.toFloat(), b.statusColor("paid")))
         if (unpaidC > 0) add(Slice(s.unpaid, unpaidC.toFloat(), b.statusColor("sent")))
         if (overdueC > 0) add(Slice(s.overdue, overdueC.toFloat(), b.statusColor("overdue")))
         if (draftC > 0) add(Slice(s.draft, draftC.toFloat(), b.statusColor("draft")))
     }
-
-    // top clients (all-time)
-    val topClients = clients.filter { it.deletedAt == null }.map { cl ->
-        cl to live.filter { it.clientId == cl.id && it.status != "cancelled" }
-            .sumOf { invoiceTotals(it, items, payments).total }
-    }.filter { it.second > 0 }.sortedByDescending { it.second }.take(5)
-
-    // overdue list
-    val overdue = live.filter { effectiveStatus(it, invoiceTotals(it, items, payments)) == "overdue" }
-        .sortedBy { it.dueDate }
-
-    // best selling products by invoice frequency
-    val freq = HashMap<String, Int>()
-    items.filter { it.deletedAt == null }.forEach { it2 ->
-        val key = it2.description.trim().lowercase()
-        if (key.isNotBlank()) freq[key] = (freq[key] ?: 0) + 1
-    }
-    val bestSelling = freq.entries.sortedByDescending { it.value }.take(5)
 
     ScreenColumn {
         ScreenTitle(s.reports, sub = s.business)
@@ -240,3 +240,13 @@ private fun LegendDot(label: String, color: androidx.compose.ui.graphics.Color) 
         Text(label, color = b.textDim, fontSize = 12.sp, fontWeight = FontWeight.Medium)
     }
 }
+
+private data class ReportAgg(
+    val revSeries: List<Float>,
+    val expSeries: List<Float>,
+    val monthLabels: List<String>,
+    val counts: IntArray,
+    val topClients: List<Pair<com.vinakili.app.data.Client, Double>>,
+    val overdue: List<com.vinakili.app.data.Invoice>,
+    val bestSelling: List<Pair<String, Int>>,
+)
