@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Bizana"
+rootProject.name = "Vinakili"
 include(":app")

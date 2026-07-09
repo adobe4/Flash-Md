@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.bizana.app"
+    namespace = "com.vinakili.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.bizana.app"
+        applicationId = "com.vinakili.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -19,10 +19,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("keystore/bizana.keystore")
-            storePassword = "bizana2026"
-            keyAlias = "bizana"
-            keyPassword = "bizana2026"
+            storeFile = file("keystore/vinakili.keystore")
+            storePassword = "vinakili2026"
+            keyAlias = "vinakili"
+            keyPassword = "vinakili2026"
         }
     }
 

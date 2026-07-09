@@ -1,4 +1,4 @@
-name: Build Bizana APK
+name: Build Vinakili APK
 
 on:
   push:
@@ -33,25 +33,25 @@ jobs:
       - name: Rename APKs
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/Bizana-release.apk
-          cp app/build/outputs/apk/debug/app-debug.apk dist/Bizana-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Vinakili-release.apk
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Vinakili-debug.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Bizana-APK
+          name: Vinakili-APK
           path: dist/*.apk
           if-no-files-found: error
 
       - name: Publish rolling release
-        if: github.ref == 'refs/heads/claude/bizana-android-app-o3aimf' || github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/claude/vinakili-android-app-o3aimf' || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: Bizana — latest build
+          name: Vinakili — latest build
           body: |
-            Automated Bizana APK build from ${{ github.sha }}.
-            Download **Bizana-release.apk** and install on your Android device
+            Automated Vinakili APK build from ${{ github.sha }}.
+            Download **Vinakili-release.apk** and install on your Android device
             (enable "Install unknown apps" for your browser/file manager first).
           files: dist/*.apk
           fail_on_unmatched_files: true

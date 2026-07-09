@@ -1,10 +1,10 @@
-# Bizana
+# Vinakili
 
 A 100% offline personal-finance + business-invoice Android app for Tanzanian
 users. Currency is TZS throughout. Native **Kotlin + Jetpack Compose** — no
 WebView, no server, no login. All data lives on the device.
 
-The app has two sections switchable from the header:
+The app has two sections, switchable from Settings:
 
 - **Personal (Binafsi)** — accent amber
   - **Lists (Orodha)** — debts & to-buy items, totals, CSV/JSON export
@@ -25,19 +25,21 @@ The app has two sections switchable from the header:
 - **Bilingual**: English / Kiswahili, switchable live from Settings (first-launch picker)
 - **Dark & light themes** (dark by default)
 - **Deliberate palette**: amber + blue accents — no green, no purple anywhere
+- **Liquid-glass design**: floating morphing dock, glass balance pill in the
+  header (tap it to jump to Balance), soft glows and spring-fluid animations
 - **Native invoice PDF** generated with Android's `PdfDocument`
-- **Backup**: one-tap full JSON backup shared through the native share sheet
-  (Google Drive, WhatsApp, Telegram…); restore with **merge** or **replace**
-- Per-section JSON export/import; Lists also does CSV
-- Smooth Compose animations, haptic feedback, soft-delete everywhere
+- **One backup for everything**: a single JSON export in Settings, shared through
+  the native share sheet (Drive, WhatsApp, Telegram…); importing on another
+  device puts every record back where it belongs, statistics intact
+- Soft-deletes everywhere; haptics reserved for long-press only
 
 ## Getting the APK
 
 Every push builds a signed APK in GitHub Actions
 (`.github/workflows/android.yml`). Grab it from:
 
-- the **Bizana-APK** artifact on the workflow run, or
-- the **latest** GitHub release (`Bizana-release.apk`).
+- the **Vinakili-APK** artifact on the workflow run, or
+- the **latest** GitHub release (`Vinakili-release.apk`).
 
 On your phone, enable "Install unknown apps" for your browser/file manager,
 then open the APK to install.
@@ -50,5 +52,5 @@ Requires the Android SDK (API 35) and JDK 17.
 ./gradlew assembleRelease   # -> app/build/outputs/apk/release/app-release.apk
 ```
 
-The repo ships a self-signed release keystore (`app/keystore/bizana.keystore`)
+The repo ships a self-signed release keystore (`app/keystore/vinakili.keystore`)
 so CI can produce an installable, signed APK out of the box.
