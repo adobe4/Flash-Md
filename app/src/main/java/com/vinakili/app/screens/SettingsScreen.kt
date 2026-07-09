@@ -1,17 +1,34 @@
 package com.vinakili.app.screens
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,6 +44,7 @@ import com.vinakili.app.ui.LocalB
 import com.vinakili.app.ui.PrimaryButton
 import com.vinakili.app.ui.SectionTitle
 import com.vinakili.app.ui.SegPicker
+import com.vinakili.app.ui.noRippleClickable
 
 @Composable
 fun SettingsScreen(app: AppState) {
@@ -75,8 +93,55 @@ fun SettingsScreen(app: AppState) {
             }, Modifier.fillMaxWidth(), icon = Icons.Rounded.CloudDownload)
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
+        DeveloperCard()
+
+        Spacer(Modifier.height(16.dp))
         Text("Vinakili · v1.0.0", color = b.muted, fontSize = 12.sp, fontWeight = FontWeight.Medium,
             modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+private fun DeveloperCard() {
+    val b = LocalB.current
+    val ctx = LocalContext.current
+    Card(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(46.dp).clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(b.amber, b.blue))),
+                contentAlignment = Alignment.Center,
+            ) { Text("VA", color = b.onAmber, fontWeight = FontWeight.Black, fontSize = 16.sp) }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Vinei Adobe", color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text("Developer", color = b.muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+                .background(b.danger.copy(alpha = 0.14f))
+                .noRippleClickable {
+                    try {
+                        ctx.startActivity(
+                            Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://youtube.com/@vinei?si=UmXUajaJoWuLJvlE"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    } catch (_: Exception) { }
+                }
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Rounded.PlayCircle, "YouTube", tint = b.danger, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text("YouTube", color = b.text, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("@vinei", color = b.textDim, fontSize = 12.sp)
+            }
+            Icon(Icons.Rounded.OpenInNew, null, tint = b.muted, modifier = Modifier.size(16.dp))
+        }
     }
 }

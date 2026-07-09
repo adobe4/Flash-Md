@@ -1,9 +1,8 @@
 package com.vinakili.app
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -53,6 +52,7 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SpaceDashboard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -166,13 +166,11 @@ private fun MainShell(app: AppState, s: Str) {
         Column(Modifier.fillMaxSize()) {
             Header(app, s)
             Box(Modifier.fillMaxSize()) {
-                AnimatedContent(
+                // A plain crossfade only animates alpha — no layout/scale work, so
+                // switching heavy screens stays smooth. Each screen composes once.
+                Crossfade(
                     targetState = ScreenKey(app.business, tabIndex, app.current),
-                    transitionSpec = {
-                        (fadeIn(tween(240)) + scaleIn(initialScale = 0.975f, animationSpec = tween(240)))
-                            .togetherWith(fadeOut(tween(160)))
-                            .using(SizeTransform(clip = false))
-                    },
+                    animationSpec = tween(190),
                     label = "content",
                 ) { key ->
                     when (val screen = key.screen) {
@@ -222,27 +220,33 @@ private fun RootContent(app: AppState, s: Str) {
 @Composable
 private fun Header(app: AppState, s: Str) {
     val b = LocalB.current
+    // Left: brand.  Right: balance pill + settings, grouped and baseline-aligned,
+    // so nothing sits dead-centre under a camera notch.
     Row(
-        Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        VinakiliMark(34.dp)
-
-        BalancePill(app, s)
-
-        Box(
-            Modifier.size(40.dp)
-                .liquidGlass(b, 100.dp, elevation = 8.dp)
-                .noRippleClickable { if (app.current !is Screen.Settings) app.push(Screen.Settings) },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Rounded.Settings, s.settings, tint = b.textDim, modifier = Modifier.size(20.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            VinakiliMark(30.dp)
+            Spacer(Modifier.width(9.dp))
+            Text("Vinakili", color = b.text, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            BalancePill(app, s)
+            Box(
+                Modifier.size(42.dp)
+                    .liquidGlass(b, 100.dp, elevation = 6.dp)
+                    .noRippleClickable { if (app.current !is Screen.Settings) app.push(Screen.Settings) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Rounded.Settings, s.settings, tint = b.textDim, modifier = Modifier.size(20.dp))
+            }
         }
     }
 }
 
-/** Liquid-glass pill in the notch area showing total balance; tapping opens the Balance tab. */
+/** Compact liquid-glass balance chip — one line, 42dp tall to match the gear; opens Balance. */
 @Composable
 private fun BalancePill(app: AppState, s: Str) {
     val b = LocalB.current
@@ -250,23 +254,22 @@ private fun BalancePill(app: AppState, s: Str) {
     val total = balances.filter { it.deletedAt == null }.sumOf { it.amount }
     Row(
         Modifier
-            .liquidGlass(b, 24.dp, glow = b.amber, elevation = 10.dp)
+            .height(42.dp)
+            .liquidGlass(b, 100.dp, glow = b.amber, elevation = 6.dp)
             .noRippleClickable {
                 app.business = false
                 app.personalTab = 2
                 app.stack.clear()
             }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .animateContentSize(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)),
+            .padding(start = 12.dp, end = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Rounded.AccountBalanceWallet, s.balance, tint = b.amber, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(8.dp))
-        Column {
-            Text(s.balance, color = b.muted, fontSize = 9.sp, fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp)
-            AnimatedMoney(total, color = b.text, fontSize = 14.sp, compact = true)
+        Box(Modifier.size(24.dp).clip(androidx.compose.foundation.shape.CircleShape)
+            .background(b.amber.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.AccountBalanceWallet, s.balance, tint = b.amber, modifier = Modifier.size(14.dp))
         }
+        Spacer(Modifier.width(9.dp))
+        AnimatedMoney(total, color = b.text, fontSize = 15.sp, compact = true)
     }
 }
 

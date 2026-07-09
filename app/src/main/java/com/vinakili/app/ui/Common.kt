@@ -116,7 +116,7 @@ fun StatTile(
     val b = LocalB.current
     Box(
         modifier
-            .softCard(b, 18.dp, glow = accent, elevation = 6.dp)
+            .softCard(b, 18.dp, elevation = 4.dp)
             .padding(14.dp)
     ) {
         Column {

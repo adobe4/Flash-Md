@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
  * Liquid-glass surface: soft shadow, translucent gradient fill, luminous edge.
  * Pass a [glow] color to tint the shadow (amber/blue halo).
  */
-fun Modifier.liquidGlass(b: BColors, radius: Dp, glow: Color? = null, elevation: Dp = 14.dp): Modifier {
+fun Modifier.liquidGlass(b: BColors, radius: Dp, glow: Color? = null, elevation: Dp = 12.dp): Modifier {
     val shape = RoundedCornerShape(radius)
     return this
         .shadow(elevation, shape,
@@ -27,7 +27,7 @@ fun Modifier.liquidGlass(b: BColors, radius: Dp, glow: Color? = null, elevation:
 }
 
 /** Solid card surface with a soft drop shadow. */
-fun Modifier.softCard(b: BColors, radius: Dp, glow: Color? = null, elevation: Dp = 8.dp): Modifier {
+fun Modifier.softCard(b: BColors, radius: Dp, glow: Color? = null, elevation: Dp = 5.dp): Modifier {
     val shape = RoundedCornerShape(radius)
     return this
         .shadow(elevation, shape,
