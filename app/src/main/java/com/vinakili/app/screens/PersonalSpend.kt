@@ -120,20 +120,7 @@ fun SpendScreen(app: AppState) {
                 EmptyState(s.emptyList, s.addSomething, Icons.Rounded.Payments)
             } else {
                 spend.sortedByDescending { it.createdAt }.forEach { e ->
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 3.dp)
-                            .clip(RoundedCornerShape(14.dp)).background(b.surface)
-                            .border(1.dp, b.hairline, RoundedCornerShape(14.dp))
-                            .longPressable(onClick = {}, onLongClick = { Repo.personalItems.softDelete(e.id); app.showToast(s.deletedOk) })
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(b.amber))
-                        Spacer(Modifier.width(12.dp))
-                        Text(e.name.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp, modifier = Modifier.weight(1f))
-                        Text(money(e.amount), color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    }
+                    SpendRow(e, onDelete = { Repo.personalItems.softDelete(e.id); app.showToast(s.deletedOk) })
                 }
             }
         }
@@ -150,5 +137,35 @@ fun SpendScreen(app: AppState) {
             Repo.personalItems.upsert(PersonalItem(type = "spend", name = what.trim(), amount = amount.toAmount()))
             app.showToast(s.savedOk); sheet = false
         }, Modifier.fillMaxWidth(), accent = b.amber, onAccent = b.onAmber)
+    }
+}
+
+@Composable
+private fun SpendRow(e: com.vinakili.app.data.PersonalItem, onDelete: () -> Unit) {
+    val b = LocalB.current
+    val s = LocalStr.current
+    var actions by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(14.dp)).background(b.surface)
+            .border(1.dp, b.hairline, RoundedCornerShape(14.dp))
+            .longPressable(onClick = { actions = !actions }, onLongClick = { actions = true })
+            .padding(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(8.dp).clip(CircleShape).background(b.amber))
+            Spacer(Modifier.width(12.dp))
+            Text(e.name.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp, modifier = Modifier.weight(1f))
+            Text(money(e.amount), color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        }
+        com.vinakili.app.ui.ExpandCard(actions) {
+            Spacer(Modifier.height(12.dp))
+            com.vinakili.app.ui.ActionChips(listOf(
+                com.vinakili.app.ui.RowAction(Icons.Rounded.Delete, s.delete, b.danger) {
+                    onDelete(); actions = false
+                },
+            ))
+        }
     }
 }

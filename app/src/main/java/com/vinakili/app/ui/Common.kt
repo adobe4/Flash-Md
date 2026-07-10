@@ -267,3 +267,29 @@ fun ExpandCard(expanded: Boolean, content: @Composable () -> Unit) {
         exit = fadeOut(tween(120)) + shrinkVertically(tween(150)),
     ) { Column { content() } }
 }
+
+/** One labelled action button in a row's action bar. */
+data class RowAction(val icon: ImageVector, val label: String, val tint: Color, val onClick: () -> Unit)
+
+/** A tidy row of labelled action chips, revealed under an item when it's tapped/held. */
+@Composable
+fun ActionChips(actions: List<RowAction>, modifier: Modifier = Modifier) {
+    val b = LocalB.current
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        actions.forEach { a ->
+            Row(
+                Modifier.weight(1f)
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(a.tint.copy(alpha = 0.14f))
+                    .noRippleClickable(a.onClick)
+                    .padding(vertical = 9.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(a.icon, a.label, tint = a.tint, modifier = Modifier.size(15.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(a.label, color = a.tint, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
+            }
+        }
+    }
+}

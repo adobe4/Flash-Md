@@ -106,21 +106,33 @@ fun BalanceScreen(app: AppState) {
             } else {
                 places.forEach { (place, sum, cIdx) ->
                     val first = entries.first { it.where.trim().equals(place.trim(), true) }
-                    Row(
+                    var actions by remember(first.id) { mutableStateOf(false) }
+                    Column(
                         Modifier.fillMaxWidth().padding(vertical = 3.dp)
                             .clip(RoundedCornerShape(14.dp)).background(b.surface)
                             .border(1.dp, b.hairline, RoundedCornerShape(14.dp))
-                            .longPressable(
-                                onClick = { editing = first; where = first.where; amount = first.amount.toString(); colorIdx = first.color; sheet = true },
-                                onLongClick = { Repo.balances.softDelete(first.id); app.showToast(s.deletedOk) })
+                            .longPressable(onClick = { actions = !actions }, onLongClick = { actions = true })
                             .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(12.dp).clip(CircleShape).background(b.palette[cIdx % b.palette.size]))
-                        Spacer(Modifier.width(12.dp))
-                        Text(place.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp, modifier = Modifier.weight(1f))
-                        Text(money(sum), color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(12.dp).clip(CircleShape).background(b.palette[cIdx % b.palette.size]))
+                            Spacer(Modifier.width(12.dp))
+                            Text(place.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp, modifier = Modifier.weight(1f))
+                            Text(money(sum), color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        }
+                        com.vinakili.app.ui.ExpandCard(actions) {
+                            Spacer(Modifier.height(12.dp))
+                            com.vinakili.app.ui.ActionChips(listOf(
+                                com.vinakili.app.ui.RowAction(Icons.Rounded.Edit, s.edit, b.textDim) {
+                                    editing = first; where = first.where; amount = first.amount.toString()
+                                    colorIdx = first.color; sheet = true; actions = false
+                                },
+                                com.vinakili.app.ui.RowAction(Icons.Rounded.Delete, s.delete, b.danger) {
+                                    Repo.balances.softDelete(first.id); app.showToast(s.deletedOk); actions = false
+                                },
+                            ))
+                        }
                     }
                 }
             }

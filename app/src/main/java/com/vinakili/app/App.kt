@@ -1,21 +1,21 @@
 package com.vinakili.app
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -103,7 +103,13 @@ import kotlinx.coroutines.delay
 
 data class TabDef(val label: String, val icon: ImageVector)
 
-private data class ScreenKey(val business: Boolean, val tab: Int, val screen: Screen)
+private data class ScreenKey(val business: Boolean, val tab: Int, val screen: Screen) {
+    /** Linear position for deciding slide direction: root tabs first, overlays after. */
+    val order: Int get() = when (screen) {
+        is Screen.Root -> (if (business) 100 else 0) + tab
+        else -> 1000
+    }
+}
 
 @Composable
 fun VinakiliApp(app: AppState) {
@@ -166,11 +172,21 @@ private fun MainShell(app: AppState, s: Str) {
         Column(Modifier.fillMaxSize()) {
             Header(app, s)
             Box(Modifier.fillMaxSize()) {
-                // A plain crossfade only animates alpha — no layout/scale work, so
-                // switching heavy screens stays smooth. Each screen composes once.
-                Crossfade(
+                // Directional slide + fade: a small horizontal translate (a fraction of
+                // the width) plus a crossfade — cheap (just a graphicsLayer offset) yet
+                // gives a clear, smooth in/out sense of moving forward or back.
+                AnimatedContent(
                     targetState = ScreenKey(app.business, tabIndex, app.current),
-                    animationSpec = tween(190),
+                    transitionSpec = {
+                        val forward = targetState.order >= initialState.order
+                        val dir = if (forward) 1 else -1
+                        (slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { w -> dir * w / 5 } +
+                            fadeIn(tween(220)))
+                            .togetherWith(
+                                slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { w -> -dir * w / 5 } +
+                                    fadeOut(tween(180))
+                            )
+                    },
                     label = "content",
                 ) { key ->
                     when (val screen = key.screen) {
@@ -273,63 +289,70 @@ private fun BalancePill(app: AppState, s: Str) {
     }
 }
 
-/** Floating liquid-glass dock with a spring-morphing active pill. */
+/**
+ * Floating liquid-glass dock. The active highlight is a fixed-size pill that
+ * sits behind the ICON only and glides between tabs; labels are always shown
+ * beneath each icon and constrained to their slot, so nothing spills out.
+ */
 @Composable
 private fun DockNav(app: AppState, tabs: List<TabDef>, tabIndex: Int) {
     val b = LocalB.current
     val accent = b.accent(app.business)
-    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 10.dp)) {
+    val iconRow = 38.dp
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 18.dp).padding(bottom = 10.dp)) {
         BoxWithConstraints(
-            Modifier.fillMaxWidth().liquidGlass(b, 30.dp, elevation = 18.dp).padding(6.dp),
+            Modifier.fillMaxWidth().liquidGlass(b, 28.dp, elevation = 16.dp).padding(horizontal = 6.dp, vertical = 8.dp),
         ) {
             val itemW = maxWidth / tabs.size
+            val pillW = if (itemW < 54.dp) itemW - 6.dp else 52.dp
             val indicatorX by animateDpAsState(
-                itemW * tabIndex,
-                spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow),
+                itemW * tabIndex + (itemW - pillW) / 2,
+                spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
                 label = "dock",
             )
+            // moving highlight behind the active icon
             Box(
                 Modifier
                     .offset(x = indicatorX)
-                    .width(itemW)
-                    .height(54.dp)
-                    .padding(horizontal = 3.dp)
+                    .width(pillW)
+                    .height(iconRow)
                     .background(
-                        Brush.verticalGradient(
-                            listOf(accent.copy(alpha = 0.30f), accent.copy(alpha = 0.10f))
-                        ),
-                        RoundedCornerShape(24.dp),
+                        Brush.verticalGradient(listOf(accent.copy(alpha = 0.28f), accent.copy(alpha = 0.12f))),
+                        RoundedCornerShape(50),
                     )
-                    .border(1.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(24.dp)),
+                    .border(1.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(50)),
             )
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEachIndexed { i, tab ->
                     val sel = i == tabIndex
                     val scale by animateFloatAsState(
-                        if (sel) 1.15f else 1f,
+                        if (sel) 1.12f else 1f,
                         spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
                         label = "icon",
                     )
                     val tint by animateColorAsState(if (sel) accent else b.muted, tween(200), label = "tint")
                     Column(
-                        Modifier.weight(1f).height(54.dp)
+                        Modifier.weight(1f)
                             .noRippleClickable {
                                 if (app.business) app.businessTab = i else app.personalTab = i
                             },
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
                     ) {
-                        Icon(tab.icon, tab.label, tint = tint,
-                            modifier = Modifier.size(22.dp).graphicsLayer { scaleX = scale; scaleY = scale })
-                        AnimatedVisibility(
-                            sel,
-                            enter = fadeIn(tween(180)) + expandVertically(
-                                spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)),
-                            exit = fadeOut(tween(100)) + shrinkVertically(tween(120)),
-                        ) {
-                            Text(tab.label, color = accent, fontWeight = FontWeight.Bold,
-                                fontSize = 9.sp, maxLines = 1, modifier = Modifier.padding(top = 2.dp))
+                        Box(Modifier.height(iconRow), contentAlignment = Alignment.Center) {
+                            Icon(tab.icon, tab.label, tint = tint,
+                                modifier = Modifier.size(22.dp).graphicsLayer { scaleX = scale; scaleY = scale })
                         }
+                        Text(
+                            tab.label,
+                            color = tint,
+                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 8.5.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(top = 3.dp, start = 2.dp, end = 2.dp),
+                        )
                     }
                 }
             }

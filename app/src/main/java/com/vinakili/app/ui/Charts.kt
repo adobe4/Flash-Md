@@ -51,7 +51,7 @@ fun BarChart(
     valueLabel: ((Float) -> String)? = null,
 ) {
     val b = LocalB.current
-    val anim by animateFloatAsState(if (data.isEmpty()) 0f else 1f, tween(650, easing = LinearOutSlowInEasing), label = "bars")
+    val anim by animateFloatAsState(if (data.isEmpty()) 0f else 1f, tween(420, easing = LinearOutSlowInEasing), label = "bars")
     val maxV = (data.flatMap { it.values }.maxOrNull() ?: 1f).coerceAtLeast(1f)
     val density = LocalDensity.current
     Column(modifier.fillMaxWidth()) {
@@ -104,7 +104,7 @@ fun LineChart(
     secondColor: Color? = null,
 ) {
     val b = LocalB.current
-    val anim by animateFloatAsState(if (values.isEmpty()) 0f else 1f, tween(750, easing = LinearOutSlowInEasing), label = "line")
+    val anim by animateFloatAsState(if (values.isEmpty()) 0f else 1f, tween(460, easing = LinearOutSlowInEasing), label = "line")
     val all = values + (secondValues ?: emptyList())
     val maxV = (all.maxOrNull() ?: 1f).coerceAtLeast(1f)
     val density = LocalDensity.current
@@ -179,7 +179,7 @@ fun DonutChart(
 ) {
     val b = LocalB.current
     val total = slices.sumOf { it.value.toDouble() }.toFloat().coerceAtLeast(0.0001f)
-    val anim by animateFloatAsState(if (slices.isEmpty()) 0f else 1f, tween(800, easing = LinearOutSlowInEasing), label = "donut")
+    val anim by animateFloatAsState(if (slices.isEmpty()) 0f else 1f, tween(480, easing = LinearOutSlowInEasing), label = "donut")
     val density = LocalDensity.current
     Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center) {

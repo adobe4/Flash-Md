@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -142,24 +143,32 @@ private fun MoneyGoalCard(g: Goal, app: AppState) {
     val s = LocalStr.current
     val frac = if (g.target > 0) (g.current / g.target).toFloat().coerceIn(0f, 1f) else 0f
     val done = g.current >= g.target && g.target > 0
+    var actions by remember(g.id) { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Box(Modifier.fillMaxWidth().longPressable(onClick = {}, onLongClick = { Repo.goals.softDelete(g.id); app.showToast(s.deletedOk) })) {
-            Column(Modifier.fillMaxWidth()) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(g.name.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    if (done) Text(s.goalReached, color = b.amber, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
-                Spacer(Modifier.height(4.dp))
-                Text("${money(g.current)} / ${money(g.target)}", color = b.textDim, fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium)
-                Spacer(Modifier.height(10.dp))
-                ProgressBar(frac, b.amber)
+        Column(Modifier.fillMaxWidth()
+            .longPressable(onClick = { actions = !actions }, onLongClick = { actions = true })) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(g.name.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                if (done) Text(s.goalReached, color = b.amber, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            }
+            Spacer(Modifier.height(4.dp))
+            Text("${money(g.current)} / ${money(g.target)}", color = b.textDim, fontSize = 13.sp,
+                fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(10.dp))
+            ProgressBar(frac, b.amber)
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                QuickAdd("+1k", 1000.0, g)
+                QuickAdd("+10k", 10000.0, g)
+                QuickAdd("+100k", 100000.0, g)
+            }
+            com.vinakili.app.ui.ExpandCard(actions) {
                 Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    QuickAdd("+1k", 1000.0, g)
-                    QuickAdd("+10k", 10000.0, g)
-                    QuickAdd("+100k", 100000.0, g)
-                }
+                com.vinakili.app.ui.ActionChips(listOf(
+                    com.vinakili.app.ui.RowAction(Icons.Rounded.Delete, s.delete, b.danger) {
+                        Repo.goals.softDelete(g.id); app.showToast(s.deletedOk); actions = false
+                    },
+                ))
             }
         }
     }
@@ -184,10 +193,11 @@ private fun QuickAdd(label: String, amt: Double, g: Goal) {
 private fun StuffCard(g: Goal, app: AppState) {
     val b = LocalB.current
     val s = LocalStr.current
+    var actions by remember(g.id) { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Row(Modifier.fillMaxWidth()
-            .longPressable(onClick = {}, onLongClick = { Repo.goals.softDelete(g.id); app.showToast(s.deletedOk) }),
-            verticalAlignment = Alignment.CenterVertically) {
+      Column(Modifier.fillMaxWidth()
+          .longPressable(onClick = { actions = !actions }, onLongClick = { actions = true })) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(g.name.ifBlank { "—" }, color = if (g.done) b.muted else b.text,
                     fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -202,12 +212,22 @@ private fun StuffCard(g: Goal, app: AppState) {
                 contentAlignment = Alignment.Center,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Check, null, tint = if (g.done) b.onBlue else b.textDim, modifier = Modifier.size(15.dp))
+                    Icon(if (g.done) Icons.Rounded.Replay else Icons.Rounded.Check, null,
+                        tint = if (g.done) b.onBlue else b.textDim, modifier = Modifier.size(15.dp))
                     Spacer(Modifier.width(5.dp))
                     Text(s.markBought, color = if (g.done) b.onBlue else b.textDim,
                         fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
                 }
             }
         }
+        com.vinakili.app.ui.ExpandCard(actions) {
+            Spacer(Modifier.height(12.dp))
+            com.vinakili.app.ui.ActionChips(listOf(
+                com.vinakili.app.ui.RowAction(Icons.Rounded.Delete, s.delete, b.danger) {
+                    Repo.goals.softDelete(g.id); app.showToast(s.deletedOk); actions = false
+                },
+            ))
+        }
+      }
     }
 }

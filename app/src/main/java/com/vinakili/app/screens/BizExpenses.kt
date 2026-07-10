@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CreditCard
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.material3.Text
@@ -152,19 +153,30 @@ fun ExpensesScreen(app: AppState) {
                 EmptyState(s.emptyList, s.addSomething, Icons.Rounded.CreditCard)
             } else {
                 filtered.forEach { e ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)
+                    var actions by remember(e.id) { mutableStateOf(false) }
+                    Column(Modifier.fillMaxWidth().padding(vertical = 3.dp)
                         .clip(RoundedCornerShape(14.dp)).background(b.surface)
                         .border(1.dp, b.hairline, RoundedCornerShape(14.dp))
-                        .longPressable(onClick = {}, onLongClick = { Repo.expenses.softDelete(e.id); app.showToast(s.deletedOk) })
-                        .padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(CircleShape)
-                            .background(b.palette[EXP_CATS.indexOf(e.category).coerceAtLeast(0) % b.palette.size]))
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(e.what.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                            Text("${s.expCatLabel(e.category)} · ${fmtDate(e.date, lang)}", color = b.textDim, fontSize = 11.5.sp)
+                        .longPressable(onClick = { actions = !actions }, onLongClick = { actions = true })
+                        .padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(8.dp).clip(CircleShape)
+                                .background(b.palette[EXP_CATS.indexOf(e.category).coerceAtLeast(0) % b.palette.size]))
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(e.what.ifBlank { "—" }, color = b.text, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                Text("${s.expCatLabel(e.category)} · ${fmtDate(e.date, lang)}", color = b.textDim, fontSize = 11.5.sp)
+                            }
+                            Text(money(e.amount), color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
-                        Text(money(e.amount), color = b.text, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        com.vinakili.app.ui.ExpandCard(actions) {
+                            Spacer(Modifier.height(12.dp))
+                            com.vinakili.app.ui.ActionChips(listOf(
+                                com.vinakili.app.ui.RowAction(Icons.Rounded.Delete, s.delete, b.danger) {
+                                    Repo.expenses.softDelete(e.id); app.showToast(s.deletedOk); actions = false
+                                },
+                            ))
+                        }
                     }
                 }
             }

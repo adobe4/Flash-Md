@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -186,11 +187,14 @@ private fun ListRow(item: PersonalItem, onToggle: () -> Unit, onEdit: () -> Unit
                 fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
         com.vinakili.app.ui.ExpandCard(actions) {
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconAction(Icons.Rounded.Edit, b.textDim, s.edit, onEdit)
-                IconAction(Icons.Rounded.Delete, b.danger, s.delete, onDelete)
-            }
+            Spacer(Modifier.height(12.dp))
+            com.vinakili.app.ui.ActionChips(listOf(
+                com.vinakili.app.ui.RowAction(
+                    if (item.done) Icons.Rounded.Replay else Icons.Rounded.Check,
+                    if (item.done) s.markUndone else s.markDone, accent) { onToggle(); actions = false },
+                com.vinakili.app.ui.RowAction(Icons.Rounded.Edit, s.edit, b.textDim) { onEdit(); actions = false },
+                com.vinakili.app.ui.RowAction(Icons.Rounded.Delete, s.delete, b.danger) { onDelete(); actions = false },
+            ))
         }
     }
 }
